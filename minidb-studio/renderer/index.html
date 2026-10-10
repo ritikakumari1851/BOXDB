@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOXDB</title>
+  <meta name="description" content="BOXDB — A beautiful local database query tool" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ─── Custom Titlebar ─────────────────────────────────────────── -->
+  <div class="titlebar" id="titlebar">
+    <div class="titlebar-left">
+      <div class="titlebar-logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="12" cy="5" rx="9" ry="3" fill="url(#lg1)" opacity="0.9"/>
+          <path d="M3 5v4.5c0 1.657 4.03 3 9 3s9-1.343 9-3V5" stroke="url(#lg2)" stroke-width="1.5" fill="none"/>
+          <path d="M3 9.5v4.5c0 1.657 4.03 3 9 3s9-1.343 9-3V9.5" stroke="url(#lg2)" stroke-width="1.5" fill="none"/>
+          <path d="M3 14v4.5c0 1.657 4.03 3 9 3s9-1.343 9-3V14" stroke="url(#lg2)" stroke-width="1.5" fill="none"/>
+          <defs>
+            <linearGradient id="lg1" x1="3" y1="5" x2="21" y2="5" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+            <linearGradient id="lg2" x1="3" y1="5" x2="21" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="titlebar-title">BOXDB</span>
+      <span class="titlebar-version">v1.0</span>
+    </div>
+    <div class="titlebar-controls">
+      <button class="tbar-btn tbar-min" id="btn-minimize" title="Minimize">
+        <svg width="10" height="2" viewBox="0 0 10 2"><rect width="10" height="2" rx="1" fill="currentColor"/></svg>
+      </button>
+      <button class="tbar-btn tbar-max" id="btn-maximize" title="Maximize">
+        <svg width="10" height="10" viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+      </button>
+      <button class="tbar-btn tbar-close" id="btn-close" title="Close">
+        <svg width="10" height="10" viewBox="0 0 10 10"><line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── App Shell ───────────────────────────────────────────────── -->
+  <div class="app-shell">
+
+    <!-- ── Sidebar ──────────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-label">DATABASE EXPLORER</span>
+        <button class="icon-btn" id="btn-refresh-tables" title="Refresh">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+
+      <!-- Tables section -->
+      <div class="sidebar-section">
+        <div class="section-header" id="tables-section-header">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span>TABLES</span>
+          <span class="badge" id="table-count-badge">0</span>
+        </div>
+        <div class="table-list" id="table-list">
+          <div class="table-empty">No tables found</div>
+        </div>
+      </div>
+
+      <!-- Quick commands section -->
+      <div class="sidebar-section sidebar-commands">
+        <div class="section-header">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span>QUICK COMMANDS</span>
+        </div>
+        <div class="quick-cmds">
+          <button class="quick-cmd" data-query="GET * FROM ">
+            <span class="cmd-icon">↗</span> GET all rows
+          </button>
+          <button class="quick-cmd" data-query="BUILD TABLE  WITH id INT name TEXT">
+            <span class="cmd-icon">＋</span> BUILD TABLE
+          </button>
+          <button class="quick-cmd" data-query="ADD INTO  VALUES ">
+            <span class="cmd-icon">✦</span> ADD row
+          </button>
+          <button class="quick-cmd" data-query="CHANGE  SET  =  FILTER id = ">
+            <span class="cmd-icon">✎</span> CHANGE row
+          </button>
+          <button class="quick-cmd" data-query="REMOVE FROM  FILTER id = ">
+            <span class="cmd-icon">✕</span> REMOVE row
+          </button>
+          <button class="quick-cmd" data-query="INDEX  ON ">
+            <span class="cmd-icon">⚡</span> CREATE INDEX
+          </button>
+        </div>
+      </div>
+
+      <!-- Sidebar footer -->
+      <div class="sidebar-footer">
+        <div class="db-path-indicator">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          <span>Local Storage</span>
+        </div>
+        <div class="connection-dot"></div>
+      </div>
+    </aside>
+
+    <!-- ── Main Area ─────────────────────────────────────────────── -->
+    <main class="main-area">
+
+      <!-- Tabs bar -->
+      <div class="tabs-bar" id="tabs-bar">
+        <div class="tabs-list" id="tabs-list"></div>
+        <button class="add-tab-btn" id="btn-add-tab" title="New Tab">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <!-- Editor pane -->
+      <div class="editor-pane">
+        <div class="editor-toolbar">
+          <div class="toolbar-left">
+            <button class="tool-btn primary-btn" id="btn-run" title="Run Query (Ctrl+Enter)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Run Query
+            </button>
+            <button class="tool-btn" id="btn-clear" title="Clear Editor">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+              Clear
+            </button>
+            <button class="tool-btn" id="btn-format" title="Format Query">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+              Format
+            </button>
+          </div>
+          <div class="toolbar-right">
+            <span class="query-lang-badge">BOXDB QL</span>
+            <button class="tool-btn" id="btn-export-csv" title="Export CSV" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV
+            </button>
+            <button class="tool-btn" id="btn-export-json" title="Export JSON" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              JSON
+            </button>
+          </div>
+        </div>
+
+        <!-- Code editor -->
+        <div class="code-editor-wrap">
+          <div class="line-numbers" id="line-numbers">1</div>
+          <textarea
+            id="query-editor"
+            class="code-editor"
+            placeholder="-- BOXDB Query Editor&#10;-- Try: GET * FROM users&#10;-- Or:  BUILD TABLE products WITH id INT name TEXT price FLOAT"
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+          ></textarea>
+          <div class="editor-highlight" id="editor-highlight" aria-hidden="true"></div>
+        </div>
+
+        <!-- Editor status bar -->
+        <div class="editor-statusbar">
+          <div class="status-left">
+            <span id="cursor-pos">Ln 1, Col 1</span>
+            <span class="status-sep">·</span>
+            <span id="char-count">0 chars</span>
+          </div>
+          <div class="status-right">
+            <span id="exec-time"></span>
+            <span id="status-msg" class="status-ready">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Results pane ──────────────────────────────────────── -->
+      <div class="results-pane" id="results-pane">
+        <div class="results-toolbar">
+          <div class="results-tabs">
+            <button class="res-tab active" id="tab-results" data-panel="panel-results">Results</button>
+            <button class="res-tab" id="tab-history" data-panel="panel-history">History</button>
+            <button class="res-tab" id="tab-messages" data-panel="panel-messages">Messages</button>
+          </div>
+          <div class="results-meta" id="results-meta"></div>
+        </div>
+
+        <!-- Results panel -->
+        <div class="res-panel active" id="panel-results">
+          <div class="results-placeholder" id="results-placeholder">
+            <div class="placeholder-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v4.5c0 1.657 4.03 3 9 3s9-1.343 9-3V5"/>
+                <path d="M3 9.5v4.5c0 1.657 4.03 3 9 3s9-1.343 9-3V9.5"/>
+                <path d="M3 14v4.5c0 1.657 4.03 3 9 3s9-1.343 9-3V14"/>
+              </svg>
+            </div>
+            <p>Run a query to see results here</p>
+          </div>
+          <div class="table-container" id="results-table-wrap" style="display:none;">
+            <table class="results-table" id="results-table">
+              <thead id="results-thead"></thead>
+              <tbody id="results-tbody"></tbody>
+            </table>
+          </div>
+          <div class="error-panel" id="error-panel" style="display:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <strong>Query Error</strong>
+              <pre id="error-text"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- History panel -->
+        <div class="res-panel" id="panel-history">
+          <div class="history-toolbar">
+            <span class="history-count" id="history-count">0 queries</span>
+            <button class="tool-btn" id="btn-clear-history">Clear History</button>
+          </div>
+          <div class="history-list" id="history-list">
+            <div class="table-empty">No query history yet</div>
+          </div>
+        </div>
+
+        <!-- Messages panel -->
+        <div class="res-panel" id="panel-messages">
+          <div class="messages-list" id="messages-list">
+            <div class="message-item info">
+              <span class="msg-time">Now</span>
+              <span class="msg-text">BOXDB started. Ready.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ─── Loading Overlay ─────────────────────────────────────────── -->
+  <div class="loading-overlay" id="loading-overlay" style="display:none;">
+    <div class="spinner-ring"></div>
+    <span>Executing query…</span>
+  </div>
+
+  <!-- ─── Notification Toast ──────────────────────────────────────── -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ─── Schema Popup ────────────────────────────────────────────── -->
+  <div class="schema-popup" id="schema-popup" style="display:none;">
+    <div class="schema-popup-header">
+      <span id="schema-popup-title">Table Schema</span>
+      <button class="icon-btn" id="schema-popup-close">✕</button>
+    </div>
+    <div class="schema-popup-body" id="schema-popup-body"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

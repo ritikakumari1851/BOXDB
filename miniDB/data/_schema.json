@@ -1,0 +1,13 @@
+{
+  "employees": {
+    "id": "INT",
+    "name": "TEXT",
+    "salary": "FLOAT",
+    "active": "BOOL"
+  },
+  "user": {
+    "id": "INT",
+    "name": "TEXT"
+  },
+  "WITH": {}
+}

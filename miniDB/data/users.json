@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "name": "Alice",
+    "age": 25,
+    "city": "delhi"
+  },
+  {
+    "id": 2,
+    "name": "Bob",
+    "age": 30,
+    "city": "mumbai"
+  }
+]
