@@ -1,0 +1,3 @@
+"""
+miniDB package root
+"""

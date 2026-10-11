@@ -120,9 +120,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ─── Window Controls ──────────────────────────────────────────────────────────
 function initWindowControls() {
-  $('btn-minimize').onclick = () => window.minidb.minimize();
-  $('btn-maximize').onclick = () => window.minidb.maximize();
-  $('btn-close').onclick = () => window.minidb.close();
+  if (window.minidb?.minimize) {
+    $('btn-minimize').onclick = () => window.minidb.minimize();
+    $('btn-maximize').onclick = () => window.minidb.maximize();
+    $('btn-close').onclick = () => window.minidb.close();
+  }
 }
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
@@ -649,13 +651,18 @@ function initSidebar() {
 
   document.querySelectorAll('.quick-cmd').forEach((btn) => {
     btn.onclick = () => {
-      queryEditor.value = btn.dataset.query;
+      const q = btn.dataset.query;
+      queryEditor.value = q;
       updateLineNumbers();
       doSyntaxHighlight();
       updateEditorStats();
       queryEditor.focus();
-      // Place cursor at end
-      queryEditor.selectionStart = queryEditor.selectionEnd = queryEditor.value.length;
+      const doubleSpaceIdx = q.indexOf('  ');
+      if (doubleSpaceIdx !== -1) {
+        queryEditor.selectionStart = queryEditor.selectionEnd = doubleSpaceIdx + 1;
+      } else {
+        queryEditor.selectionStart = queryEditor.selectionEnd = q.length;
+      }
     };
   });
 }

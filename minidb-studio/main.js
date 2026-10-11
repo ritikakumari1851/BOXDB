@@ -8,9 +8,8 @@ let pythonProcess;
 
 // Resolve paths
 function getPythonPath() {
-  // In production: bundled python; in dev: system python
-  const devPath = 'python';
-  return devPath;
+  if (process.env.PYTHON) return process.env.PYTHON;
+  return 'python';
 }
 
 function getMiniDBPath() {
@@ -71,15 +70,37 @@ ipcMain.handle('execute-query', async (event, query) => {
     child.stdout.on('data', (d) => (stdout += d.toString()));
     child.stderr.on('data', (d) => (stderr += d.toString()));
 
+    child.on('error', (err) => {
+      resolve({
+        success: false,
+        error: `Failed to start Python process: ${err.message}. Please ensure Python is installed and added to PATH.`,
+        rows: [],
+        columns: [],
+        message: null,
+      });
+    });
+
     child.on('close', (code) => {
-      if (code !== 0 || stderr) {
-        resolve({ success: false, error: stderr || 'Unknown error', rows: [], columns: [], message: null });
+      if (code !== 0) {
+        resolve({
+          success: false,
+          error: stderr.trim() || stdout.trim() || `Process exited with code ${code}`,
+          rows: [],
+          columns: [],
+          message: null,
+        });
       } else {
         try {
           const result = JSON.parse(stdout);
           resolve(result);
         } catch (e) {
-          resolve({ success: false, error: 'Failed to parse result: ' + stdout, rows: [], columns: [], message: null });
+          resolve({
+            success: false,
+            error: stderr.trim() || ('Failed to parse result: ' + stdout),
+            rows: [],
+            columns: [],
+            message: null,
+          });
         }
       }
     });
@@ -94,26 +115,43 @@ ipcMain.handle('list-tables', async () => {
   const minidbPath = getMiniDBPath();
   const dataDir = path.join(minidbPath, 'data');
   try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
     const files = fs.readdirSync(dataDir);
     const schemaPath = path.join(dataDir, '_schema.json');
     let schemas = {};
     if (fs.existsSync(schemaPath)) {
-      schemas = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+      try {
+        schemas = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+      } catch (e) {}
     }
 
     const tables = files
-      .filter((f) => f.endsWith('.json') && f !== '_schema.json')
+      .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
       .map((f) => {
         const name = f.replace('.json', '');
         let rowCount = 0;
         try {
-          const rows = JSON.parse(fs.readFileSync(path.join(dataDir, f), 'utf8'));
-          rowCount = rows.length;
+          const content = fs.readFileSync(path.join(dataDir, f), 'utf8').trim();
+          if (content) {
+            const rows = JSON.parse(content);
+            if (Array.isArray(rows)) {
+              rowCount = rows.length;
+            }
+          }
         } catch (e) {}
+        const rawSchema = schemas[name] || null;
+        let cleanSchema = null;
+        if (rawSchema) {
+          cleanSchema = Object.fromEntries(
+            Object.entries(rawSchema).filter(([k]) => !k.startsWith('_'))
+          );
+        }
         return {
           name,
           rowCount,
-          schema: schemas[name] || null,
+          schema: cleanSchema,
         };
       });
 

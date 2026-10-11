@@ -1,0 +1,12 @@
+# Node.js dependencies and builds
+node_modules/
+dist/
+build/
+.DS_Store
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/

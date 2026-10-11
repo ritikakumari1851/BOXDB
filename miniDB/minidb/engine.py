@@ -103,8 +103,7 @@ class ExecutionEngine:
             if op == "LIKE":
                 if col_v is None:
                     return False
-                pat = re.escape(str(cmp_v))
-                pat = pat.replace(r'\%', '.*').replace(r'\_', '.')
+                pat = re.escape(str(cmp_v)).replace(r'\%', '.*').replace(r'\_', '.').replace('%', '.*').replace('_', '.')
                 return bool(re.match('^' + pat + '$', str(col_v), re.IGNORECASE))
 
         return True
@@ -188,14 +187,18 @@ class ExecutionEngine:
             rows = unique
 
         # 5. ORDER BY
+        def _sort_key(r, col):
+            v = self._row_val(r, col)
+            if v is None:
+                return (1, 0, "")
+            if isinstance(v, (int, float)):
+                return (0, 0, v)
+            return (0, 1, str(v))
+
         for item in reversed(ast.get("order_by", [])):
             col = item["col"]
             rev = item["direction"] == "DESC"
-            rows.sort(
-                key=lambda r: (self._row_val(r, col) is None,
-                               self._row_val(r, col) if self._row_val(r, col) is not None else ""),
-                reverse=rev
-            )
+            rows.sort(key=lambda r: _sort_key(r, col), reverse=rev)
 
         # 6. LIMIT / OFFSET
         offset = ast.get("offset") or 0
@@ -553,9 +556,8 @@ class ExecutionEngine:
     # ══════════════════════════════════════════════════════════════════════════
 
     def _exec_show_tables(self, _) -> list:
-        schemas = self.storage.read_schemas()
-        tables = [k for k in schemas if not k.startswith("_")]
-        return [{"Tables": t} for t in sorted(tables)]
+        tables = self.storage.list_tables()
+        return [{"Tables": t} for t in tables]
 
     # ══════════════════════════════════════════════════════════════════════════
     # DESCRIBE table
@@ -573,7 +575,7 @@ class ExecutionEngine:
                 if rows:
                     raw = {k: "TEXT" for k in rows[0].keys()}
                 else:
-                    raise FileNotFoundError(f"Table '{tname}' not found.")
+                    raw = {}
             except FileNotFoundError:
                 raise FileNotFoundError(f"Table '{tname}' not found.")
 

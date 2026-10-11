@@ -9,5 +9,20 @@
     "id": "INT",
     "name": "TEXT"
   },
-  "WITH": {}
+  "users": {
+    "id": "INT",
+    "name": "TEXT",
+    "age": "INT",
+    "city": "TEXT"
+  },
+  "orders": {
+    "id": "INT",
+    "user_id": "INT",
+    "product": "TEXT",
+    "price": "FLOAT"
+  },
+  "Student": {
+    "id": "INT",
+    "name": "TEXT"
+  }
 }

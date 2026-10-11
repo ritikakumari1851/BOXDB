@@ -72,12 +72,26 @@ class Parser:
             return True
         return False
 
+    RESERVED_CLAUSE_KEYWORDS = {
+        "GET", "ADD", "CHANGE", "REMOVE", "BUILD", "INDEX", "WITH", "FILTER",
+        "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER",
+        "FROM", "INTO", "VALUES", "SET", "WHERE",
+        "JOIN", "INNER", "LEFT", "RIGHT", "OUTER", "CROSS", "ON",
+        "ORDER", "BY", "GROUP", "HAVING", "LIMIT", "OFFSET",
+        "TABLE", "TABLES", "SHOW", "DESCRIBE", "TRUNCATE"
+    }
+
     def _parse_name(self):
-        """Parse a plain identifier or keyword-used-as-name."""
+        """Parse a plain identifier or non-clause keyword-used-as-name."""
         tok = self._current()
         if tok is None:
             raise SyntaxError("Expected identifier, got EOF")
-        if tok.type in ("IDENTIFIER", "KEYWORD"):
+        if tok.type == "KEYWORD":
+            if tok.value in self.RESERVED_CLAUSE_KEYWORDS:
+                raise SyntaxError(f"Expected identifier, got reserved keyword '{tok.value}'")
+            self.pos += 1
+            return tok.value
+        if tok.type == "IDENTIFIER":
             self.pos += 1
             return tok.value
         raise SyntaxError(f"Expected identifier, got {tok.type}:{tok.value}")
@@ -702,23 +716,31 @@ class Parser:
         if self._is_kw("INDEX"):
             self._advance()
 
-        # Detect: CREATE INDEX idx_name ON table (col)
-        tok = self._current()
-        next_tok = self._peek(1)
-        if (tok and tok.type in ("IDENTIFIER", "KEYWORD") and
-                next_tok and next_tok.type == "KEYWORD" and next_tok.value == "ON"):
-            # idx_name ON table (col)  — skip index name
+        if self._is_kw("ON"):
             self._advance()
-            self._expect_kw("ON")
+            table = self._parse_name()
+            self._try_tok("LPAREN")
+            col = self._parse_name()
+            self._try_tok("RPAREN")
+            return {"type": "CREATE_INDEX", "table": table, "column": col}
+
+        first_name = self._parse_name()
+        self._expect_kw("ON")
+
+        next_tok = self._peek(1)
+        # Check if what follows ON is `table (col)` or `table col`
+        if next_tok and (next_tok.type == "LPAREN" or (next_tok.type in ("IDENTIFIER", "KEYWORD") and next_tok.value not in ("SEMICOLON",))):
+            # first_name was the index name, next token is table name
             table = self._parse_name()
             self._try_tok("LPAREN")
             col = self._parse_name()
             self._try_tok("RPAREN")
         else:
-            # BOXDB style: INDEX table ON col
-            table = self._parse_name()
-            self._expect_kw("ON")
+            # BOXDB native: INDEX table ON col
+            table = first_name
+            self._try_tok("LPAREN")
             col = self._parse_name()
+            self._try_tok("RPAREN")
 
         return {"type": "CREATE_INDEX", "table": table, "column": col}
 

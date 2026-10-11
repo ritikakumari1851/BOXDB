@@ -9,7 +9,11 @@ from minidb.index import HashIndex
 
 
 class StorageEngine:
-    def __init__(self, data_dir: str = "data"):
+    def __init__(self, data_dir: str = None):
+        if data_dir is None:
+            # Default to data folder inside miniDB directory regardless of current working directory
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            data_dir = os.path.join(base_dir, "data")
         self.data_dir = data_dir
         self.indexes: dict[str, dict[str, HashIndex]] = {}
         os.makedirs(data_dir, exist_ok=True)
@@ -29,11 +33,27 @@ class StorageEngine:
         if not os.path.exists(path):
             raise FileNotFoundError(f"Table '{table_name}' does not exist.")
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            content = f.read().strip()
+            if not content:
+                return []
+            return json.loads(content)
 
     def write_table(self, table_name: str, data: list[dict]):
         with open(self._table_path(table_name), "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
+
+    def list_tables(self) -> list[str]:
+        """Return list of all existing table names from schema and data files."""
+        tables = set()
+        schemas = self.read_schemas()
+        for k in schemas:
+            if not k.startswith("_"):
+                tables.add(k)
+        if os.path.exists(self.data_dir):
+            for f in os.listdir(self.data_dir):
+                if f.endswith(".json") and not f.startswith("_"):
+                    tables.add(f[:-5])
+        return sorted(tables)
 
     def drop_table(self, table_name: str):
         """Delete table file, remove from schema, clear indexes."""
@@ -41,8 +61,9 @@ class StorageEngine:
         if os.path.exists(path):
             os.remove(path)
         schemas = self.read_schemas()
-        schemas.pop(table_name, None)
-        self.write_schemas(schemas)
+        if table_name in schemas:
+            schemas.pop(table_name, None)
+            self.write_schemas(schemas)
         self.indexes.pop(table_name, None)
 
     # ── Schema I/O ───────────────────────────────────────────────────────────

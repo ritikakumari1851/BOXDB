@@ -1,0 +1,10 @@
+{
+  "python.analysis.extraPaths": [
+    "./miniDB",
+    "${workspaceFolder}/miniDB"
+  ],
+  "python.autoComplete.extraPaths": [
+    "./miniDB",
+    "${workspaceFolder}/miniDB"
+  ]
+}
